@@ -3,6 +3,28 @@
 #include <QColor>
 #include <QPainter>
 
+static QPointF constrainedPosition(QPointF pos, QLineF line)
+{
+	QPointF p1 = line.p1();
+	QPointF p2 = line.p2();
+	QPointF dp = p2 - p1;
+	QPointF rdp(-dp.y(), dp.x());
+	double d = rdp.x() / rdp.y();
+	double l = (pos.x() - p1.x() + (p1.y() - pos.y()) * d) / (dp.x() - dp.y() * d);
+	return p1 + dp * qBound(0.0, l, 1.0);
+}
+
+void ControlPoint::constrain(QLineF line)
+{
+	m_constrainLine = line;
+	m_p = constrainedPosition(m_p, line);
+}
+
+void ControlPoint::unconstrain()
+{
+	m_constrainLine.reset();
+}
+
 bool ControlPoint::isHoveredBy(QPointF point) const
 {
 	double dx = m_p.x() - point.x();
@@ -32,7 +54,10 @@ bool ControlPoint::release(QPointF pos)
 bool ControlPoint::move(QPointF pos)
 {
 	if (m_isDragged) {
-		m_p = pos + m_offset;
+		if (m_constrainLine)
+			m_p = constrainedPosition(pos + m_offset, *m_constrainLine);
+		else
+			m_p = pos + m_offset;
 	}
 
 	return m_isDragged;

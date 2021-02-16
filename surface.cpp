@@ -105,6 +105,16 @@ void Surface::keyPressEvent(QKeyEvent *event)
 
 void Surface::updateSpline()
 {
+	for (int i = 0; i < m_controlPoints.size(); ++i) {
+		ControlPoint &p = m_controlPoints[i];
+		if (i == 0 || i == m_controlPoints.size() - 1 || i % 2 != 0) {
+			p.unconstrain();
+		} else {
+			QPointF prev = m_controlPoints[i - 1].position();
+			QPointF next = m_controlPoints[i + 1].position();
+			p.constrain(QLineF(prev, next));
+		}
+	}
 	update();
 }
 

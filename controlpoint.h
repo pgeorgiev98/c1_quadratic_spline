@@ -15,6 +15,7 @@ public:
 	ControlPoint(QPointF p, double size) : m_p(p), m_isDragged(false), m_size(size) {}
 
 	void constrain(QLineF line);
+	void fix();
 	void unconstrain();
 
 	bool isHoveredBy(QPointF point) const;

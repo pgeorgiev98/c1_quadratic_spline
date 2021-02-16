@@ -13,6 +13,7 @@ public:
 
 public slots:
 	void updateSpline();
+	void updateBar();
 	void selectPoint(int pointIndex);
 	void setControlPointSize(double size);
 	void deletePoint();
@@ -32,6 +33,7 @@ protected:
 
 private:
 	QVector<ControlPoint> m_controlPoints;
+	QVector<ControlPoint> m_barPoints;
 	QPointF m_mousePos;
 	int m_selectedContolPoint;
 };

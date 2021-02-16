@@ -5,6 +5,9 @@
 
 static QPointF constrainedPosition(QPointF pos, QLineF line)
 {
+	if (line.p1() == line.p2())
+		return line.p1();
+
 	QPointF p1 = line.p1();
 	QPointF p2 = line.p2();
 	QPointF dp = p2 - p1;
@@ -18,6 +21,11 @@ void ControlPoint::constrain(QLineF line)
 {
 	m_constrainLine = line;
 	m_p = constrainedPosition(m_p, line);
+}
+
+void ControlPoint::fix()
+{
+	m_constrainLine = QLineF(m_p, m_p);
 }
 
 void ControlPoint::unconstrain()

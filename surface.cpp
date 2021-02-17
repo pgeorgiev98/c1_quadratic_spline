@@ -53,9 +53,11 @@ void Surface::paintEvent(QPaintEvent *)
 		c.draw(&painter, scale);
 	}
 
+	painter.setPen(QPen(normalColor, lineThickness, Qt::DashLine));
 	for (int i = 0; i < m_barPoints.size() - 1; ++i)
 		painter.drawLine(Utilities::scale(m_barPoints[i].position(), scale), Utilities::scale(m_barPoints[i + 1].position(), scale));
 
+	painter.setPen(QPen(normalColor, lineThickness));
 	for (int i = 0; i < m_controlPoints.size(); ++i) {
 		QColor color = (i % 2 == 0 ? normalColor : backgroundColor);
 		m_controlPoints[i].draw(&painter, scale, normalColor, color);

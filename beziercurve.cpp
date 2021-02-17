@@ -10,6 +10,10 @@ BezierCurve::BezierCurve(QPointF p1, QPointF p2, QPointF p3)
 
 void BezierCurve::draw(QPainter *painter, QSizeF scale)
 {
+	QPen pen = painter->pen();
+	pen.setStyle(Qt::DashLine);
+	painter->setPen(pen);
+
 	QPointF p1 = Utilities::scale(this->p1, scale);
 	QPointF p2 = Utilities::scale(this->p2, scale);
 	QPointF p3 = Utilities::scale(this->p3, scale);
@@ -17,11 +21,14 @@ void BezierCurve::draw(QPainter *painter, QSizeF scale)
 	painter->drawLine(p1, p2);
 	painter->drawLine(p2, p3);
 
+	pen.setStyle(Qt::SolidLine);
+	painter->setPen(pen);
+
 	const int segmentCount = 100;
 	QVector<QLineF> lines;
 	lines.reserve(segmentCount);
 
-	QPointF lastPoint = p2;
+	QPointF lastPoint = p3;
 	for (int i = 1; i < segmentCount; ++i) {
 		double t = double(i) / (segmentCount - 1);
 		QPointF m1 = t * p1 + (1 - t) * p2;

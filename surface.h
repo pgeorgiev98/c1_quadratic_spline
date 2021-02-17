@@ -12,14 +12,13 @@ public:
 	explicit Surface(QWidget *parent = nullptr);
 
 public slots:
+	void updateConstraints();
 	void updateSpline();
 	void updateBar();
 	void selectPoint(int pointIndex);
 	void setControlPointSize(double size);
-	void deletePoint();
 
 signals:
-	void deleteEnabledChanged(bool deleteEnabled);
 	void splineChanged();
 	void selectionChanged();
 
@@ -29,7 +28,6 @@ protected:
 	void mousePressEvent(QMouseEvent *event) override;
 	void mouseReleaseEvent(QMouseEvent *event) override;
 	void mouseDoubleClickEvent(QMouseEvent *event) override;
-	void keyPressEvent(QKeyEvent *event) override;
 
 private:
 	QVector<ControlPoint> m_controlPoints;

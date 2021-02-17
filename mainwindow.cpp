@@ -34,10 +34,6 @@ MainWindow::MainWindow(QWidget *parent)
 	QDoubleSpinBox *controlPointSize = new QDoubleSpinBox;
 	toolBar->addWidget(labeledWidget("Control point size: ", controlPointSize));
 
-	QToolButton *deletePointButton = new QToolButton;
-	deletePointButton->setText("Delete point");
-	toolBar->addWidget(deletePointButton);
-
 	addToolBar(Qt::ToolBarArea::RightToolBarArea, toolBar);
 
 	controlPointSize->setSingleStep(1);
@@ -50,10 +46,6 @@ MainWindow::MainWindow(QWidget *parent)
 	});
 	m_surface->setControlPointSize(controlPointSize->value());
 
-	connect(deletePointButton, &QToolButton::clicked, m_surface, &Surface::deletePoint);
-
-	deletePointButton->setEnabled(false);
-	connect(m_surface, &Surface::deleteEnabledChanged, deletePointButton, &QWidget::setEnabled);
 	connect(m_surface, &Surface::splineChanged, this, &MainWindow::updateToolBar);
 	connect(m_surface, &Surface::selectionChanged, this, &MainWindow::updateToolBar);
 	updateToolBar();

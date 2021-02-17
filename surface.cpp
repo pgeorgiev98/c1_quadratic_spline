@@ -19,18 +19,6 @@ Surface::Surface(QWidget *parent)
 	: QWidget(parent)
 	, m_selectedContolPoint(0)
 {
-	m_controlPoints.append(ControlPoint(QPointF(0.1, 0.2), 1));
-	m_controlPoints.append(ControlPoint(QPointF(0.3, 0.3), 1));
-	m_controlPoints.append(ControlPoint(QPointF(0.5, 0.3), 1));
-	m_controlPoints.append(ControlPoint(QPointF(0.7, 0.3), 1));
-	m_controlPoints.append(ControlPoint(QPointF(0.9, 0.2), 1));
-
-	for (int i = 0; i < m_controlPoints.size(); ++i)
-		if (i % 2 == 0)
-			m_barPoints.append(ControlPoint(QPointF(0.1 + i / 2 * 0.8 / (m_controlPoints.size() / 2), 0.9), 1));
-	updateSpline();
-	updateBar();
-
 	QPalette pal = palette();
 	pal.setColor(QPalette::Window, QColor::fromRgbF(1, 1, 1));
 	setPalette(pal);
@@ -59,12 +47,12 @@ void Surface::paintEvent(QPaintEvent *)
 
 	painter.setPen(QPen(normalColor, lineThickness));
 	for (int i = 0; i < m_controlPoints.size(); ++i) {
-		QColor color = (i % 2 == 0 ? normalColor : backgroundColor);
+		QColor color = (i % 2 == 0 && i > 1 && i < m_controlPoints.size() - 2) ? backgroundColor : normalColor;
 		m_controlPoints[i].draw(&painter, scale, normalColor, color);
 	}
 
-	for (const ControlPoint &p : m_barPoints)
-		p.draw(&painter, scale, normalColor, normalColor);
+	for (int i = 0; i < m_barPoints.size(); ++i)
+		m_barPoints[i].draw(&painter, scale, normalColor, i > 0 && i < m_barPoints.size() - 1 ? backgroundColor : normalColor);
 }
 
 void Surface::mouseMoveEvent(QMouseEvent *event)
@@ -73,13 +61,15 @@ void Surface::mouseMoveEvent(QMouseEvent *event)
 	QSizeF scale = size();
 	m_mousePos = Utilities::reverseScale(mousePos, scale);
 
-	m_controlPoints.first().move(m_mousePos);
-	m_controlPoints.last().move(m_mousePos);
-	for (int i = 1; i < m_controlPoints.size() - 1; ++i) {
-		if (m_controlPoints[i].move(m_mousePos)) {
-			if (i % 2 != 0)
-				updateSpline();
-			updateBar();
+	if (!m_controlPoints.isEmpty()) {
+		m_controlPoints.first().move(m_mousePos);
+		m_controlPoints.last().move(m_mousePos);
+		for (int i = 1; i < m_controlPoints.size() - 1; ++i) {
+			if (m_controlPoints[i].move(m_mousePos)) {
+				if (i % 2 != 0)
+					updateSpline();
+				updateBar();
+			}
 		}
 	}
 
@@ -130,18 +120,46 @@ void Surface::mouseReleaseEvent(QMouseEvent *event)
 
 	if (mustUpdate)
 		updateSpline();
+
+	updateConstraints();
 }
 
-void Surface::mouseDoubleClickEvent(QMouseEvent *)
+void Surface::mouseDoubleClickEvent(QMouseEvent *event)
 {
-}
+	double pointSize = Settings::instance()->controlPointSize.get();
+	m_mousePos = Utilities::reverseScale(event->pos(), size());
 
-void Surface::keyPressEvent(QKeyEvent *event)
-{
-	if (event->key() == Qt::Key_Delete) {
-		deletePoint();
-		event->accept();
+	// Create new bar point
+	if (!m_controlPoints.isEmpty()) {
+		if (m_barPoints.size() == 0) {
+			m_barPoints.append(ControlPoint(QPointF(0.1, 0.9), pointSize));
+		} else if (m_barPoints.size() == 1) {
+			m_barPoints.append(ControlPoint(QPointF(0.9, 0.9), pointSize));
+		} else {
+			for (int i = 0; i < m_barPoints.size() - 1; ++i) {
+				QPointF p = m_barPoints[i].position();
+				p.setX(p.x() - m_barPoints.first().position().x());
+				p.setX(p.x() * double(m_barPoints.size() - 1) / double(m_barPoints.size()));
+				p.setX(p.x() + m_barPoints.first().position().x());
+				m_barPoints[i].setPosition(p);
+			}
+			ControlPoint cp = m_barPoints.last();
+			cp.setPosition((m_barPoints[m_barPoints.size() - 2].position() + cp.position()) / 2);
+			m_barPoints.insert(m_barPoints.size() - 1, cp);
+		}
 	}
+
+	// Update control point constraints
+	if (m_controlPoints.size() >= 3) {
+		QPointF a = m_controlPoints[m_controlPoints.size() - 2].position();
+		QPointF b = m_controlPoints[m_controlPoints.size() - 1].position();
+		m_controlPoints.insert(m_controlPoints.size() - 1, ControlPoint((a + b) / 2, pointSize));
+	}
+
+	m_controlPoints.append(ControlPoint(m_mousePos, pointSize));
+
+	updateConstraints();
+	update();
 }
 
 
@@ -172,8 +190,7 @@ void Surface::updateSpline()
 
 void Surface::updateBar()
 {
-	m_barPoints.first().fix();
-	m_barPoints.last().fix();
+	updateConstraints();
 	for (int i = 1; i < m_barPoints.size() - 1; ++i) {
 		QPointF prev = m_barPoints[i - 1].position();
 		QPointF next = m_barPoints[i + 1].position();
@@ -186,7 +203,6 @@ void Surface::updateBar()
 		QPointF cpD = cpNext - cpPrev;
 		double k = cpP.x() < epsilon ? cpP.y() / cpD.y() : cpP.x() / cpD.x();
 		m_barPoints[i].setPosition(prev + k * (next - prev));
-		m_barPoints[i].constrain(QLineF(prev, next));
 	}
 }
 
@@ -210,12 +226,22 @@ void Surface::setControlPointSize(double size)
 	update();
 }
 
-void Surface::deletePoint()
+void Surface::updateConstraints()
 {
-	/*
-	m_controlPoints.removeAt(m_selectedContolPoint);
-	selectPoint(qMax(0, m_selectedContolPoint - 1));
-	updateSpline();
-	emit deleteEnabledChanged(m_controlPoints.size() > 2);
-	*/
+	if (!m_barPoints.isEmpty()) {
+		m_barPoints.first().fix();
+		m_barPoints.last().fix();
+		for (int i = 1; i < m_barPoints.size() - 1; ++i)
+			m_barPoints[i].constrain(QLineF(m_barPoints[i - 1].position(), m_barPoints[i + 1].position()));
+	}
+
+	for (int i = 0; i < m_controlPoints.size(); ++i) {
+		if (i % 2 == 0 && i >= 2 && i < m_controlPoints.size() - 2) {
+			QPointF a = m_controlPoints[i - 1].position();
+			QPointF b = m_controlPoints[i + 1].position();
+			m_controlPoints[i].constrain(QLineF(a, b));
+		} else {
+			m_controlPoints[i].unconstrain();
+		}
+	}
 }

@@ -5,8 +5,10 @@
 
 #include <QPaintEvent>
 #include <QPainter>
+#include <QVector2D>
 
 static const double epsilon = 1e-10;
+static const double pointConstrainEpsilon = 1e-5;
 
 static const QColor backgroundColor = QColor::fromRgbF(1, 1, 1);
 static const QColor normalColor = QColor::fromRgbF(0, 0, 0);
@@ -231,15 +233,17 @@ void Surface::updateConstraints()
 	if (!m_barPoints.isEmpty()) {
 		m_barPoints.first().fix();
 		m_barPoints.last().fix();
+		QPointF ep(pointConstrainEpsilon, 0);
 		for (int i = 1; i < m_barPoints.size() - 1; ++i)
-			m_barPoints[i].constrain(QLineF(m_barPoints[i - 1].position(), m_barPoints[i + 1].position()));
+			m_barPoints[i].constrain(QLineF(m_barPoints[i - 1].position() + ep, m_barPoints[i + 1].position() - ep));
 	}
 
 	for (int i = 0; i < m_controlPoints.size(); ++i) {
 		if (i % 2 == 0 && i >= 2 && i < m_controlPoints.size() - 2) {
 			QPointF a = m_controlPoints[i - 1].position();
 			QPointF b = m_controlPoints[i + 1].position();
-			m_controlPoints[i].constrain(QLineF(a, b));
+			QPointF ep = (QVector2D(b - a).normalized() * pointConstrainEpsilon).toPointF();
+			m_controlPoints[i].constrain(QLineF(a + ep, b - ep));
 		} else {
 			m_controlPoints[i].unconstrain();
 		}

@@ -55,6 +55,7 @@ struct Settings
 	Field<QColor> normalColor      = Field<QColor>(*this, "normalColor",      QColor::fromRgbF(0.1, 0.1, 0.1));
 	Field<QColor> backgroundColor  = Field<QColor>(*this, "backgroundColor",  QColor::fromRgbF(1.0, 1.0, 1.0));
 	Field<QColor> polygonColor     = Field<QColor>(*this, "polygonColor",     QColor::fromRgbF(0.5, 0.5, 0.5));
+	Field<bool>   showControlPoly  = Field<bool>  (*this, "showControlPoly",  true);
 };
 
 #endif // SETTINGS_H

@@ -11,16 +11,19 @@ BezierCurve::BezierCurve(QPointF p1, QPointF p2, QPointF p3)
 void BezierCurve::draw(QPainter *painter, QSizeF scale)
 {
 	QPen pen = painter->pen();
-	pen.setStyle(Qt::DashLine);
-	pen.setColor(s()->polygonColor.get());
-	painter->setPen(pen);
 
 	QPointF p1 = Utilities::scale(this->p1, scale);
 	QPointF p2 = Utilities::scale(this->p2, scale);
 	QPointF p3 = Utilities::scale(this->p3, scale);
 
-	painter->drawLine(p1, p2);
-	painter->drawLine(p2, p3);
+	if (s()->showControlPoly.get()) {
+		pen.setStyle(Qt::DashLine);
+		pen.setColor(s()->polygonColor.get());
+		painter->setPen(pen);
+
+		painter->drawLine(p1, p2);
+		painter->drawLine(p2, p3);
+	}
 
 	pen.setStyle(Qt::SolidLine);
 	pen.setColor(s()->normalColor.get());

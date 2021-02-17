@@ -9,17 +9,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QLineEdit>
-#include <QDoubleValidator>
-
-static QWidget *labeledWidget(const QString &label, QWidget *widget)
-{
-	QWidget *w = new QWidget;
-	QHBoxLayout *layout = new QHBoxLayout;
-	layout->addWidget(new QLabel(label));
-	layout->addWidget(widget);
-	w->setLayout(layout);
-	return w;
-}
+#include <QCheckBox>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -29,20 +19,27 @@ MainWindow::MainWindow(QWidget *parent)
 
 	QToolBar *toolBar = new QToolBar;
 
-	QDoubleSpinBox *controlPointSize = new QDoubleSpinBox;
-	toolBar->addWidget(labeledWidget("Control point size: ", controlPointSize));
+	QCheckBox *showControlPoly = new QCheckBox("Show control polygon");
+	toolBar->addWidget(showControlPoly);
 
-	addToolBar(Qt::ToolBarArea::RightToolBarArea, toolBar);
+	addToolBar(Qt::ToolBarArea::BottomToolBarArea, toolBar);
 
-	controlPointSize->setSingleStep(1);
-	controlPointSize->setRange(2, 50);
-	controlPointSize->setValue(s()->controlPointSize.get());
+	QToolButton *resetButton = new QToolButton;
+	resetButton->setText("Reset");
+	toolBar->addWidget(resetButton);
 
-	connect(controlPointSize, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this](double value) {
-		m_surface->setControlPointSize(value);
+	QToolButton *equalizeButton = new QToolButton;
+	equalizeButton->setText("Equalize");
+	toolBar->addWidget(equalizeButton);
+
+	showControlPoly->setChecked(s()->showControlPoly.get());
+	connect(showControlPoly, &QCheckBox::stateChanged, [this](int state) {
+		s()->showControlPoly.set(state);
+		m_surface->update();
 	});
-	m_surface->setControlPointSize(controlPointSize->value());
 
+	connect(resetButton, &QToolButton::clicked, m_surface, &Surface::reset);
+	connect(equalizeButton, &QToolButton::clicked, m_surface, &Surface::equalize);
 	connect(m_surface, &Surface::splineChanged, this, &MainWindow::updateToolBar);
 	connect(m_surface, &Surface::selectionChanged, this, &MainWindow::updateToolBar);
 	updateToolBar();

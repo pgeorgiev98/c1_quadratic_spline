@@ -247,3 +247,21 @@ void Surface::updateConstraints()
 		}
 	}
 }
+
+void Surface::reset()
+{
+	m_barPoints.clear();
+	m_controlPoints.clear();
+	update();
+}
+
+void Surface::equalize()
+{
+	for (int i = 0; i < m_barPoints.size(); ++i) {
+		ControlPoint &cp = m_barPoints[i];
+		QPointF p = cp.position();
+		p.setX(0.1 + i * 0.8 / (m_barPoints.size() - 1));
+		cp.setPosition(p);
+	}
+	updateSpline();
+}

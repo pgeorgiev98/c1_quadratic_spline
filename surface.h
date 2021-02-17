@@ -17,6 +17,8 @@ public slots:
 	void updateBar();
 	void selectPoint(int pointIndex);
 	void setControlPointSize(double size);
+	void reset();
+	void equalize();
 
 signals:
 	void splineChanged();

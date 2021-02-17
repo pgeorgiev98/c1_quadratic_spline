@@ -1,6 +1,7 @@
 #include "surface.h"
 #include "beziercurve.h"
 #include "settings.h"
+#include "utilities.h"
 
 #include <QPaintEvent>
 #include <QPainter>
@@ -18,17 +19,15 @@ Surface::Surface(QWidget *parent)
 	: QWidget(parent)
 	, m_selectedContolPoint(0)
 {
-	const int width = 800;
-
-	m_controlPoints.append(ControlPoint(QPointF(100, 100), 1));
-	m_controlPoints.append(ControlPoint(QPointF(200, 250), 1));
-	m_controlPoints.append(ControlPoint(QPointF(300, 300), 1));
-	m_controlPoints.append(ControlPoint(QPointF(400, 250), 1));
-	m_controlPoints.append(ControlPoint(QPointF(500, 100), 1));
+	m_controlPoints.append(ControlPoint(QPointF(0.1, 0.2), 1));
+	m_controlPoints.append(ControlPoint(QPointF(0.3, 0.3), 1));
+	m_controlPoints.append(ControlPoint(QPointF(0.5, 0.3), 1));
+	m_controlPoints.append(ControlPoint(QPointF(0.7, 0.3), 1));
+	m_controlPoints.append(ControlPoint(QPointF(0.9, 0.2), 1));
 
 	for (int i = 0; i < m_controlPoints.size(); ++i)
 		if (i % 2 == 0)
-			m_barPoints.append(ControlPoint(QPointF(width * 0.1 + i / 2 * width * 0.8 / (m_controlPoints.size() / 2), 500), 1));
+			m_barPoints.append(ControlPoint(QPointF(0.1 + i / 2 * 0.8 / (m_controlPoints.size() / 2), 0.9), 1));
 	updateSpline();
 	updateBar();
 
@@ -44,36 +43,39 @@ Surface::Surface(QWidget *parent)
 void Surface::paintEvent(QPaintEvent *)
 {
 	QPainter painter(this);
+	QSizeF scale = size();
+
 	painter.setPen(QPen(normalColor, lineThickness));
 	for (int i = 0; i + 2 < m_controlPoints.size(); i += 2) {
 		BezierCurve c(m_controlPoints[i].position(),
 					  m_controlPoints[i + 1].position(),
 					  m_controlPoints[i + 2].position());
-		c.draw(&painter);
+		c.draw(&painter, scale);
 	}
 
 	for (int i = 0; i < m_barPoints.size() - 1; ++i)
-		painter.drawLine(m_barPoints[i].position(), m_barPoints[i + 1].position());
+		painter.drawLine(Utilities::scale(m_barPoints[i].position(), scale), Utilities::scale(m_barPoints[i + 1].position(), scale));
 
 	for (int i = 0; i < m_controlPoints.size(); ++i) {
 		QColor color = (i % 2 == 0 ? normalColor : backgroundColor);
-		m_controlPoints[i].draw(&painter, normalColor, color);
+		m_controlPoints[i].draw(&painter, scale, normalColor, color);
 	}
 
 	for (const ControlPoint &p : m_barPoints)
-		p.draw(&painter, normalColor, backgroundColor);
+		p.draw(&painter, scale, normalColor, backgroundColor);
 }
 
 void Surface::mouseMoveEvent(QMouseEvent *event)
 {
 	QPointF mousePos = event->pos();
-	m_mousePos = mousePos;
+	QSizeF scale = size();
+	m_mousePos = Utilities::reverseScale(mousePos, scale);
 	bool mustUpdateSpline = false;
 	bool mustUpdateBar = false;
 	for (ControlPoint &p : m_controlPoints)
-		mustUpdateBar |= p.move(mousePos);
+		mustUpdateBar |= p.move(Utilities::reverseScale(mousePos, scale));
 	for (ControlPoint &p : m_barPoints)
-		mustUpdateSpline |= p.move(mousePos);
+		mustUpdateSpline |= p.move(Utilities::reverseScale(mousePos, scale));
 
 	if (mustUpdateSpline) {
 		updateSpline();
@@ -89,13 +91,14 @@ void Surface::mouseMoveEvent(QMouseEvent *event)
 void Surface::mousePressEvent(QMouseEvent *event)
 {
 	QPointF mousePos = event->pos();
-	m_mousePos = mousePos;
+	QSizeF scale = size();
+	m_mousePos = Utilities::reverseScale(mousePos, scale);
 
 	bool pressed = false;
 
 	for (int i = 0; i < m_controlPoints.size(); ++i) {
 		ControlPoint &p = m_controlPoints[i];
-		if (p.press(mousePos)) {
+		if (p.press(mousePos, scale)) {
 			selectPoint(i);
 			pressed = true;
 			break;
@@ -103,7 +106,7 @@ void Surface::mousePressEvent(QMouseEvent *event)
 	}
 	if (!pressed) {
 		for (int i = 0; i < m_barPoints.size(); ++i) {
-			if (m_barPoints[i].press(mousePos)) {
+			if (m_barPoints[i].press(mousePos, scale)) {
 				pressed = true;
 				break;
 			}
@@ -116,12 +119,13 @@ void Surface::mousePressEvent(QMouseEvent *event)
 void Surface::mouseReleaseEvent(QMouseEvent *event)
 {
 	QPointF mousePos = event->pos();
-	m_mousePos = mousePos;
+	QSize scale = size();
+	m_mousePos = Utilities::reverseScale(mousePos, size());
 	bool mustUpdate = false;
 	for (ControlPoint &p : m_controlPoints)
-		mustUpdate |= p.release(mousePos);
+		mustUpdate |= p.release(Utilities::reverseScale(mousePos, scale));
 	for (ControlPoint &p : m_barPoints)
-		mustUpdate |= p.release(mousePos);
+		mustUpdate |= p.release(Utilities::reverseScale(mousePos, scale));
 
 	if (mustUpdate)
 		updateSpline();

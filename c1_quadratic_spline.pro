@@ -21,7 +21,8 @@ HEADERS += \
     controlpoint.h \
     mainwindow.h \
     settings.h \
-    surface.h
+    surface.h \
+    utilities.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

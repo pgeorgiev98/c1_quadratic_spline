@@ -3,6 +3,7 @@
 
 #include <QPointF>
 #include <QLineF>
+#include <QSizeF>
 #include <QColor>
 #include <optional>
 
@@ -18,11 +19,11 @@ public:
 	void fix();
 	void unconstrain();
 
-	bool isHoveredBy(QPointF point) const;
-	bool press(QPointF pos);
+	bool isHoveredBy(QPointF point, QSizeF scale) const;
+	bool press(QPointF pos, QSizeF scale);
 	bool release(QPointF pos);
 	bool move(QPointF pos);
-	void draw(QPainter *painter, QColor borderColor, QColor fillColor) const;
+	void draw(QPainter *painter, QSizeF scale, QColor borderColor, QColor fillColor) const;
 
 	QPointF position() const
 	{

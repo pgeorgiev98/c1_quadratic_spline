@@ -1,4 +1,5 @@
 #include "controlpoint.h"
+#include "utilities.h"
 
 #include <QColor>
 #include <QPainter>
@@ -33,19 +34,19 @@ void ControlPoint::unconstrain()
 	m_constrainLine.reset();
 }
 
-bool ControlPoint::isHoveredBy(QPointF point) const
+bool ControlPoint::isHoveredBy(QPointF point, QSizeF scale) const
 {
+	point = Utilities::reverseScale(point, scale);
 	double dx = m_p.x() - point.x();
 	double dy = m_p.y() - point.y();
-	return dx * dx + dy * dy <= m_size * m_size;
+	return dx * dx + dy * dy <= m_size * m_size / scale.width() / scale.height();
 }
 
-bool ControlPoint::press(QPointF pos)
+bool ControlPoint::press(QPointF pos, QSizeF scale)
 {
-	m_isDragged = isHoveredBy(pos);
+	m_isDragged = isHoveredBy(pos, scale);
 	if (m_isDragged)
-		m_offset = m_p - pos;
-
+		m_offset = m_p - Utilities::reverseScale(pos, scale);
 	return m_isDragged;
 }
 
@@ -71,9 +72,9 @@ bool ControlPoint::move(QPointF pos)
 	return m_isDragged;
 }
 
-void ControlPoint::draw(QPainter *painter, QColor borderColor, QColor fillColor) const
+void ControlPoint::draw(QPainter *painter, QSizeF scale, QColor borderColor, QColor fillColor) const
 {
 	painter->setPen(borderColor);
 	painter->setBrush(fillColor);
-	painter->drawEllipse(m_p, m_size, m_size);
+	painter->drawEllipse(Utilities::scale(m_p, scale), m_size, m_size);
 }

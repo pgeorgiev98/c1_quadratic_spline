@@ -62,7 +62,7 @@ void Surface::paintEvent(QPaintEvent *)
 	}
 
 	for (const ControlPoint &p : m_barPoints)
-		p.draw(&painter, scale, normalColor, backgroundColor);
+		p.draw(&painter, scale, normalColor, normalColor);
 }
 
 void Surface::mouseMoveEvent(QMouseEvent *event)
@@ -70,21 +70,21 @@ void Surface::mouseMoveEvent(QMouseEvent *event)
 	QPointF mousePos = event->pos();
 	QSizeF scale = size();
 	m_mousePos = Utilities::reverseScale(mousePos, scale);
-	bool mustUpdateSpline = false;
-	bool mustUpdateBar = false;
-	for (ControlPoint &p : m_controlPoints)
-		mustUpdateBar |= p.move(Utilities::reverseScale(mousePos, scale));
-	for (ControlPoint &p : m_barPoints)
-		mustUpdateSpline |= p.move(Utilities::reverseScale(mousePos, scale));
 
-	if (mustUpdateSpline) {
-		updateSpline();
-		updateBar();
+	m_controlPoints.first().move(m_mousePos);
+	m_controlPoints.last().move(m_mousePos);
+	for (int i = 1; i < m_controlPoints.size() - 1; ++i) {
+		if (m_controlPoints[i].move(m_mousePos)) {
+			if (i % 2 != 0)
+				updateSpline();
+			updateBar();
+		}
 	}
-	if (mustUpdateBar) {
-		updateBar();
-		updateSpline();
-	}
+
+	for (ControlPoint &p : m_barPoints)
+		if (p.move(m_mousePos))
+			updateSpline();
+
 	update();
 }
 
@@ -119,13 +119,12 @@ void Surface::mousePressEvent(QMouseEvent *event)
 void Surface::mouseReleaseEvent(QMouseEvent *event)
 {
 	QPointF mousePos = event->pos();
-	QSize scale = size();
 	m_mousePos = Utilities::reverseScale(mousePos, size());
 	bool mustUpdate = false;
 	for (ControlPoint &p : m_controlPoints)
-		mustUpdate |= p.release(Utilities::reverseScale(mousePos, scale));
+		mustUpdate |= p.release(m_mousePos);
 	for (ControlPoint &p : m_barPoints)
-		mustUpdate |= p.release(Utilities::reverseScale(mousePos, scale));
+		mustUpdate |= p.release(m_mousePos);
 
 	if (mustUpdate)
 		updateSpline();

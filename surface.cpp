@@ -53,8 +53,12 @@ void Surface::paintEvent(QPaintEvent *)
 		m_controlPoints[i].draw(&painter, scale, normalColor, color);
 	}
 
-	for (int i = 0; i < m_barPoints.size(); ++i)
-		m_barPoints[i].draw(&painter, scale, normalColor, i > 0 && i < m_barPoints.size() - 1 ? backgroundColor : normalColor);
+	if (!m_barPoints.isEmpty()) {
+		m_barPoints.first().draw(&painter, scale, normalColor, normalColor);
+		m_barPoints.last().draw(&painter, scale, normalColor, normalColor);
+		for (int i = 1; i < m_barPoints.size() - 1; ++i)
+			m_barPoints[i].draw(&painter, scale, normalColor, backgroundColor);
+	}
 }
 
 void Surface::mouseMoveEvent(QMouseEvent *event)
@@ -90,18 +94,18 @@ void Surface::mousePressEvent(QMouseEvent *event)
 
 	bool pressed = false;
 
-	for (int i = 0; i < m_controlPoints.size(); ++i) {
-		ControlPoint &p = m_controlPoints[i];
-		if (p.press(mousePos, scale)) {
-			selectPoint(i);
+	for (int i = m_barPoints.size() - 2; i >= 1; --i) {
+		if (m_barPoints[i].press(mousePos, scale)) {
 			pressed = true;
 			break;
 		}
 	}
+
 	if (!pressed) {
-		for (int i = 0; i < m_barPoints.size(); ++i) {
-			if (m_barPoints[i].press(mousePos, scale)) {
-				pressed = true;
+		for (int i = 0; i < m_controlPoints.size(); ++i) {
+			ControlPoint &p = m_controlPoints[i];
+			if (p.press(mousePos, scale)) {
+				selectPoint(i);
 				break;
 			}
 		}

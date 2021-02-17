@@ -10,13 +10,6 @@
 static const double epsilon = 1e-10;
 static const double pointConstrainEpsilon = 1e-5;
 
-static const QColor backgroundColor = QColor::fromRgbF(1, 1, 1);
-static const QColor normalColor = QColor::fromRgbF(0, 0, 0);
-static const QColor hoveredColor = QColor::fromRgbF(0.8, 0, 0);
-static const QColor dragColor = QColor::fromRgbF(0, 0, 0.8);
-static const QColor selectedColor = QColor::fromRgbF(0, 0.8, 0);
-static const double lineThickness = 1.0;
-
 Surface::Surface(QWidget *parent)
 	: QWidget(parent)
 	, m_selectedContolPoint(0)
@@ -33,9 +26,10 @@ Surface::Surface(QWidget *parent)
 void Surface::paintEvent(QPaintEvent *)
 {
 	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing, true);
 	QSizeF scale = size();
 
-	painter.setPen(QPen(normalColor, lineThickness));
+	painter.setPen(QPen(s()->normalColor.get(), s()->lineThickness.get()));
 	for (int i = 0; i + 2 < m_controlPoints.size(); i += 2) {
 		BezierCurve c(m_controlPoints[i].position(),
 					  m_controlPoints[i + 1].position(),
@@ -43,21 +37,21 @@ void Surface::paintEvent(QPaintEvent *)
 		c.draw(&painter, scale);
 	}
 
-	painter.setPen(QPen(normalColor, lineThickness, Qt::DashLine));
+	painter.setPen(QPen(s()->normalColor.get(), s()->lineThickness.get(), Qt::DashLine));
 	for (int i = 0; i < m_barPoints.size() - 1; ++i)
 		painter.drawLine(Utilities::scale(m_barPoints[i].position(), scale), Utilities::scale(m_barPoints[i + 1].position(), scale));
 
-	painter.setPen(QPen(normalColor, lineThickness));
+	painter.setPen(QPen(s()->normalColor.get(), s()->lineThickness.get()));
 	for (int i = 0; i < m_controlPoints.size(); ++i) {
-		QColor color = (i % 2 == 0 && i > 1 && i < m_controlPoints.size() - 2) ? backgroundColor : normalColor;
-		m_controlPoints[i].draw(&painter, scale, normalColor, color);
+		QColor color = (i % 2 == 0 && i > 1 && i < m_controlPoints.size() - 2) ? s()->backgroundColor.get() : s()->normalColor.get();
+		m_controlPoints[i].draw(&painter, scale, s()->normalColor.get(), color);
 	}
 
 	if (!m_barPoints.isEmpty()) {
-		m_barPoints.first().draw(&painter, scale, normalColor, normalColor);
-		m_barPoints.last().draw(&painter, scale, normalColor, normalColor);
+		m_barPoints.first().draw(&painter, scale, s()->normalColor.get(), s()->normalColor.get());
+		m_barPoints.last().draw(&painter, scale, s()->normalColor.get(), s()->normalColor.get());
 		for (int i = 1; i < m_barPoints.size() - 1; ++i)
-			m_barPoints[i].draw(&painter, scale, normalColor, backgroundColor);
+			m_barPoints[i].draw(&painter, scale, s()->normalColor.get(), s()->backgroundColor.get());
 	}
 }
 
@@ -132,7 +126,7 @@ void Surface::mouseReleaseEvent(QMouseEvent *event)
 
 void Surface::mouseDoubleClickEvent(QMouseEvent *event)
 {
-	double pointSize = Settings::instance()->controlPointSize.get();
+	double pointSize = s()->controlPointSize.get();
 	m_mousePos = Utilities::reverseScale(event->pos(), size());
 
 	// Create new bar point
@@ -224,7 +218,7 @@ void Surface::selectPoint(int pointIndex)
 
 void Surface::setControlPointSize(double size)
 {
-	Settings::instance()->controlPointSize.set(size);
+	s()->controlPointSize.set(size);
 	for (ControlPoint &p : m_controlPoints)
 		p.setSize(size);
 	for (ControlPoint &p : m_barPoints)

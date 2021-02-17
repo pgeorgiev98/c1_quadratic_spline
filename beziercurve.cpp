@@ -12,6 +12,7 @@ void BezierCurve::draw(QPainter *painter, QSizeF scale)
 {
 	QPen pen = painter->pen();
 	pen.setStyle(Qt::DashLine);
+	pen.setColor(s()->polygonColor.get());
 	painter->setPen(pen);
 
 	QPointF p1 = Utilities::scale(this->p1, scale);
@@ -22,6 +23,7 @@ void BezierCurve::draw(QPainter *painter, QSizeF scale)
 	painter->drawLine(p2, p3);
 
 	pen.setStyle(Qt::SolidLine);
+	pen.setColor(s()->normalColor.get());
 	painter->setPen(pen);
 
 	const int segmentCount = 100;

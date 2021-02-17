@@ -2,6 +2,7 @@
 #define SETTINGS_H
 
 #include <QSettings>
+#include <QColor>
 
 struct Settings
 {
@@ -50,6 +51,10 @@ struct Settings
 	QSettings settings;
 	Field<double> controlPointSize = Field<double>(*this, "controlPointSize", 5.0);
 	Field<double> snappingDistance = Field<double>(*this, "snappingDistance", 5.0);
+	Field<double> lineThickness    = Field<double>(*this, "lineThickness", 2.0);
+	Field<QColor> normalColor      = Field<QColor>(*this, "normalColor",      QColor::fromRgbF(0.1, 0.1, 0.1));
+	Field<QColor> backgroundColor  = Field<QColor>(*this, "backgroundColor",  QColor::fromRgbF(1.0, 1.0, 1.0));
+	Field<QColor> polygonColor     = Field<QColor>(*this, "polygonColor",     QColor::fromRgbF(0.5, 0.5, 0.5));
 };
 
 #endif // SETTINGS_H

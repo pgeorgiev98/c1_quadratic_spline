@@ -1,6 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include "settings.h"
 #include <QPointF>
 #include <QSizeF>
 
@@ -16,5 +17,10 @@ struct Utilities
 		return QPointF(point.x() / factor.width(), point.y() / factor.height());
 	}
 };
+
+inline Settings *s()
+{
+	return Settings::instance();
+}
 
 #endif // UTILITIES_H

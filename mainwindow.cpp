@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "surface.h"
-#include "settings.h"
-
-#include<QDebug>
+#include "utilities.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -38,8 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 	controlPointSize->setSingleStep(1);
 	controlPointSize->setRange(2, 50);
-	qDebug() << Settings::instance()->controlPointSize.get();
-	controlPointSize->setValue(Settings::instance()->controlPointSize.get());
+	controlPointSize->setValue(s()->controlPointSize.get());
 
 	connect(controlPointSize, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this](double value) {
 		m_surface->setControlPointSize(value);

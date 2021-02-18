@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 	QApplication a(argc, argv);
 	a.setOrganizationName("PGeorgiev");
 	a.setOrganizationDomain("pgeorgiev.org");
-	a.setApplicationName("c1_quadratic_curve");
+	a.setApplicationName("c1_quadratic_spline");
 	Settings s;
 
 	MainWindow w;
